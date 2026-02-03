@@ -1,0 +1,11 @@
+# Rust / Tauri
+src-tauri/target/
+src-tauri/Cargo.lock
+
+# Node (如果之后添加前端框架)
+node_modules/
+dist/
+
+# OS
+
+
