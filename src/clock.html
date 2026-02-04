@@ -177,6 +177,21 @@
         let showSeconds = true;
         let showDate = true;
         let selectedTimezone = 'local';
+        // 鼠标自动隐藏
+        let mouseTimer;
+
+        function hideCursor() {
+            document.body.style.cursor = 'none';
+        }
+
+        function showCursor() {
+            document.body.style.cursor = 'default';
+            clearTimeout(mouseTimer);
+            if (document.fullscreenElement) {
+                mouseTimer = setTimeout(hideCursor, 2000);
+            }
+        }
+        document.addEventListener('mousemove', showCursor);
 
         const timeEl = document.getElementById('time');
         const hoursEl = document.getElementById('hours');
@@ -267,10 +282,14 @@
         document.addEventListener('fullscreenchange', () => {
             if (document.fullscreenElement) {
                 controlsEl.classList.add('hidden');
+                mouseTimer = setTimeout(hideCursor, 2000);
             } else {
                 controlsEl.classList.remove('hidden');
+                clearTimeout(mouseTimer);
+                document.body.style.cursor = 'default';
             }
         });
+
 
         let wakeLock = null;
         btnPreventLock.addEventListener('click', async () => {
