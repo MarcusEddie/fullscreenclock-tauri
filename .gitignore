@@ -1,5 +1,6 @@
 # Rust / Tauri
 src-tauri/target/
+src-tauri/gen
 src-tauri/Cargo.lock
 
 # Node (如果之后添加前端框架)
