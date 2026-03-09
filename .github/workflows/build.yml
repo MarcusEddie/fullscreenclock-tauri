@@ -18,7 +18,7 @@ jobs:
       - name: Install Tauri CLI
         run: cargo install tauri-cli
       
-      - name: Update version in tauri.conf.json
+      - name: Set version variable
         shell: pwsh
         run: |
           # Extract version from tag (e.g., v1.0.4 -> 1.0.4)
@@ -30,13 +30,18 @@ jobs:
           }
           
           Write-Host "Setting version to: $version"
+          echo "APP_VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Append
+        
+      - name: Update version in tauri.conf.json
+        shell: pwsh
+        run: |
           
           # Update version in tauri.conf.json
           $configContent = Get-Content -Path src-tauri/tauri.conf.json -Raw
           $configJson = ConvertFrom-Json $configContent
           
           # The version is at root level
-          $configJson.version = $version
+          $configJson.version = "${{ env.APP_VERSION }}"
           
           # Convert back to JSON and save
           $configJson | ConvertTo-Json -Depth 32 | Set-Content -Path src-tauri/tauri.conf.json
@@ -51,8 +56,9 @@ jobs:
           cargo tauri build --target x86_64-pc-windows-msvc
           
       - name: Rename portable exe
+        shell: pwsh
         run: |
-          copy src-tauri\target\x86_64-pc-windows-msvc\release\fullscreen-clock.exe src-tauri\target\x86_64-pc-windows-msvc\release\fullscreen-clock-portable.exe
+          Copy-Item "src-tauri\target\x86_64-pc-windows-msvc\release\fullscreen-clock.exe" -Destination "src-tauri\target\x86_64-pc-windows-msvc\release\Fullscreen.Clock_${{ env.APP_VERSION }}_x64-portable.exe"
           
       - name: Upload Windows installer
         uses: actions/upload-artifact@v4
@@ -64,7 +70,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: windows-portable
-          path: src-tauri/target/x86_64-pc-windows-msvc/release/fullscreen-clock-portable.exe
+          path: src-tauri/target/x86_64-pc-windows-msvc/release/Fullscreen.Clock_${{ env.APP_VERSION }}_x64-portable.exe
+
 
   build-macos:
     runs-on: macos-latest
