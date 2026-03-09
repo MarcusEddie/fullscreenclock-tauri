@@ -32,11 +32,17 @@ jobs:
           Write-Host "Setting version to: $version"
           
           # Update version in tauri.conf.json
-          $config = Get-Content -Path src-tauri/tauri.conf.json | ConvertFrom-Json
-          $config.package.version = $version
-          $config | ConvertTo-Json -Depth 32 | Set-Content -Path src-tauri/tauri.conf.json
+          $configContent = Get-Content -Path src-tauri/tauri.conf.json -Raw
+          $configJson = ConvertFrom-Json $configContent
+          
+          # The version is at root level
+          $configJson.version = $version
+          
+          # Convert back to JSON and save
+          $configJson | ConvertTo-Json -Depth 32 | Set-Content -Path src-tauri/tauri.conf.json
           
           # Verify the change
+          Write-Host "Updated tauri.conf.json:"
           Get-Content -Path src-tauri/tauri.conf.json
           
       - name: Build
@@ -83,11 +89,18 @@ jobs:
           
           echo "Setting version to: $VERSION"
           
-          # Update version in tauri.conf.json using jq
-          jq ".package.version = \"$VERSION\"" src-tauri/tauri.conf.json > src-tauri/tauri.conf.json.tmp
+          # Install jq if needed
+          if ! command -v jq &> /dev/null; then
+            echo "Installing jq..."
+            brew install jq
+          fi
+          
+          # Update version at root level
+          jq ".version = \"$VERSION\"" src-tauri/tauri.conf.json > src-tauri/tauri.conf.json.tmp
           mv src-tauri/tauri.conf.json.tmp src-tauri/tauri.conf.json
           
           # Verify the change
+          echo "Updated tauri.conf.json:"
           cat src-tauri/tauri.conf.json
           
       - name: Build for Apple Silicon
