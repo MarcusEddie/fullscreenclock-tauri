@@ -17,7 +17,28 @@ jobs:
         
       - name: Install Tauri CLI
         run: cargo install tauri-cli
-        
+      
+      - name: Update version in tauri.conf.json
+        shell: pwsh
+        run: |
+          # Extract version from tag (e.g., v1.0.4 -> 1.0.4)
+          $version = "${{ github.ref_name }}" -replace '^v', ''
+          
+          if (-not $version) {
+            # Use run_number if no tag
+            $version = "0.0.${{ github.run_number }}"
+          }
+          
+          Write-Host "Setting version to: $version"
+          
+          # Update version in tauri.conf.json
+          $config = Get-Content -Path src-tauri/tauri.conf.json | ConvertFrom-Json
+          $config.package.version = $version
+          $config | ConvertTo-Json -Depth 32 | Set-Content -Path src-tauri/tauri.conf.json
+          
+          # Verify the change
+          Get-Content -Path src-tauri/tauri.conf.json
+          
       - name: Build
         run: |
           cd src-tauri
@@ -49,7 +70,26 @@ jobs:
         
       - name: Install Tauri CLI
         run: cargo install tauri-cli
-        
+
+      - name: Update version in tauri.conf.json
+        run: |
+          # Extract version from tag (e.g., v1.0.4 -> 1.0.4)
+          VERSION="${GITHUB_REF_NAME/v/}"
+          
+          if [ -z "$VERSION" ]; then
+            # Use run_number if no tag
+            VERSION="0.0.${{ github.run_number }}"
+          fi
+          
+          echo "Setting version to: $VERSION"
+          
+          # Update version in tauri.conf.json using jq
+          jq ".package.version = \"$VERSION\"" src-tauri/tauri.conf.json > src-tauri/tauri.conf.json.tmp
+          mv src-tauri/tauri.conf.json.tmp src-tauri/tauri.conf.json
+          
+          # Verify the change
+          cat src-tauri/tauri.conf.json
+          
       - name: Build for Apple Silicon
         run: |
           rustup target add aarch64-apple-darwin
